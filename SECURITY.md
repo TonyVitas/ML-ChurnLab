@@ -4,7 +4,6 @@
 - No hardcoded credentials in source code.
 - No internal Oracle DSN defaults in configuration.
 - No internal network share paths in notebooks.
-- No client-specific schema names in SQL examples.
 
 ## Local configuration
 Use environment variables (see `.env.example`):
