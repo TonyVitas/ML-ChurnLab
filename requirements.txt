@@ -1,0 +1,16 @@
+oracledb
+pandas
+numpy
+pandera
+prefect>=3.0
+pyarrow
+
+# Training
+scikit-learn
+xgboost
+lightgbm
+mlflow
+matplotlib
+shap
+optuna
+polars

@@ -1,0 +1,67 @@
+CREATE TABLE TMP_BE_CARD_SNAPSHOT NOLOGGING PARALLEL 4 AS
+WITH months AS (
+    SELECT LAST_DAY(ADD_MONTHS(:START_DATE, LEVEL - 1)) AS MONTH_END
+    FROM   DUAL
+    CONNECT BY LEVEL <= 60
+)
+SELECT
+    c.CARD_ID,
+    c.AS_OF_DT              AS MONTH_END,
+    c.CUST_ID,
+    c.STATUS,
+    c.BRCH_CODE,
+    c.CARD_LIMIT,
+    c.TOTAL_EXPOSURE_AMT,
+    c.OVERDUE_AMT_RON,
+    c.FUTURE_INST_AMT,
+    c.BONUS_AMT,
+    c.DPD,
+    c.TIMES_IN_5_DPD,
+    c.TIMES_IN_30_DPD,
+    c.TIMES_IN_60_DPD,
+    c.TIMES_IN_90_DPD,
+    c.TIMES_IN_90_PLUS_DPD,
+    c.LAST_EXPOSURE_DATE,
+    c.SENT_TO_LEGAL,
+    c.DOD,
+    c.POOL_RT,
+    c.ILOE,
+    c.DOUBTFUL_INT_AMT,
+    c.DOUBTFUL_INT_PEN_AMT,
+    c.DOUBTFUL_PRIN_AMT,
+    c.DOUBTFUL_PRIN_PEN_AMT,
+    c.FUTURE_INST_INT,
+    c.FUTURE_INST_INT_OVRD_DBT,
+    c.FUTURE_INST_OVRD_DBT,
+    c.MARKETING_INFO,
+    c.NO_OF_SUB_CARD,
+    c.OSTND_INT_AMT,
+    c.OSTND_PRIN_AMT,
+    c.OVRD_INT_AMT,
+    c.OVRD_INT_PEN_AMT,
+    c.OVRD_PRIN_AMT,
+    c.OVRD_PRIN_PEN_AMT,
+    c.TOTAL_INT_AMT,
+    c.TOTAL_PENALTY_AMT,
+    c.CARD_CANCELLATION_DATE
+FROM   months m
+JOIN   CORE.CARD c
+       ON  c.AS_OF_DT = m.MONTH_END
+       AND c.CARD_TP  = 'P'
+       AND c.DC       = 'C'
+       AND c.CUST_TP  = 'F'
+       AND c.status != 'R'
+       AND ( c.CARD_CANCELLATION_DATE > DATE '2021-01-01'
+            OR c.CARD_CANCELLATION_DATE IS NULL
+            )
+       AND ( c.CARD_CANCELLATION_DATE IS NULL
+            OR EXISTS (
+                    SELECT 1
+                    FROM   ANALYTICS.CANCELLATION_REQUESTS r
+                    WHERE  r.CARD_ID = c.CARD_ID
+                    AND    r.CARD_CANCELLATION_DATE = c.CARD_CANCELLATION_DATE
+            )
+            )
+JOIN   EDW.LU_PRD_CARD lp
+       ON  lp.PRODUCT_ID   = c.PRODUS_CARD_ID
+       AND lp.PD_LVL_2_NM  = :PRODUCT_NAME

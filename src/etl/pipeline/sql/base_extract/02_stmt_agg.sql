@@ -1,0 +1,28 @@
+CREATE TABLE TMP_BE_STMT_AGG NOLOGGING PARALLEL 4 AS
+WITH stmt_ranked AS (
+    SELECT
+        bc.CARD_ID,
+        bc.MONTH_END,
+        s.PRE_STMT_PYMNT_MIN_AMT,
+        s.STMT_PYMNT_AMT,
+        s.STMT_PYMNT_MIN_AMT,
+        s.STMT_REVOLVING_AMT,
+        ROW_NUMBER() OVER (
+            PARTITION BY bc.CARD_ID, bc.MONTH_END
+            ORDER BY s.STMT_DT DESC
+        ) AS rn
+    FROM   TMP_BE_CARD_SNAPSHOT bc
+    LEFT JOIN DWH.CARD_STATEMENT s
+           ON  s.CARD_ID  = bc.CARD_ID
+           AND s.STMT_DT >= TRUNC(bc.MONTH_END, 'MM')
+           AND s.STMT_DT <  ADD_MONTHS(TRUNC(bc.MONTH_END, 'MM'), 1)
+)
+SELECT
+    CARD_ID,
+    MONTH_END,
+    SUM(PRE_STMT_PYMNT_MIN_AMT)                        AS PRE_STMT_PYMNT_MIN_AMT,
+    SUM(STMT_PYMNT_AMT)                                AS STMT_PYMNT_AMT,
+    SUM(STMT_PYMNT_MIN_AMT)                            AS STMT_PYMNT_MIN_AMT,
+    MAX(CASE WHEN rn = 1 THEN STMT_REVOLVING_AMT END)  AS STMT_REVOLVING_AMT
+FROM   stmt_ranked
+GROUP BY CARD_ID, MONTH_END
