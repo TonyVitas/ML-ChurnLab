@@ -125,7 +125,7 @@ def extract_from_db(sql_path: str, sql: bool = True) -> pd.DataFrame:
     if sql:
         df = pd.DataFrame(rows, columns=columns)
     else:
-        df = pd.read_csv("output\CHURN_2025_6M.csv")
+        df = pd.read_csv(r"output\CHURN_2025_6M.csv")
 
     logger.info(
         "SQL extract complete: %d rows x %d cols (%.2fs)",
