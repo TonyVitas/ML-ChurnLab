@@ -11,8 +11,3 @@ Use environment variables (see `.env.example`):
 - `ORACLE_USER`
 - `ORACLE_PASSWORD`
 - `ORACLE_DSN`
-
-## Required before making this repository public
-1. Rotate any credentials that were ever committed in git history.
-2. Rewrite git history to remove leaked secrets from old commits.
-3. Verify with a secret scanner (`gitleaks` or `trufflehog`) before publishing.
